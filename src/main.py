@@ -6,6 +6,7 @@ from typing import Any
 from src.reports import dir_transactions_excel, spending_by_category
 from src.services import get_beneficial_cashback_categories
 from src.views import analyze_data
+from src.utils import get_data_range
 
 logger = logging.getLogger("main")
 log = os.path.join(os.path.dirname(__file__), "..", "logs", "main.log")
@@ -40,7 +41,7 @@ def main_page(data_user: str = None) -> Dict[str, Any]:
             print(data_user)
 
         # Период с начала месяца по заданную пользователем дату
-        period = get_time_period(data_user)
+        period = get_data_range(date_str, data_range)
 
         # Список транзакций за заданный период формата ["01.05.2020", "20.05.2020"]
         list_of_transactions = read_excel_file(path_to_file=f"{file_path}/operations.xlsx", time_period=period)
