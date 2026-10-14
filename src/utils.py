@@ -164,7 +164,7 @@ def common_information(list_dict: list[dict]) -> list[Any] | None:
             dic = {"last_digits": (row["Номер карты"])[-4:], "total_spent": row["Сумма платежа"],
                    "cashback": round((row["Кэшбэк"]) / (row["Сумма платежа"]) * 100, 2)}
             list_data.append(dic)
-        common_information_logger.info("Успешно сформированa общая информация по всем транзакциям")
+        common_information_logger.info("Успешно сформирована общая информация по всем транзакциям")
         return list_data
     except Exception as e:
         get_exchange_rate_logger.warning(
@@ -218,7 +218,7 @@ def get_currency_rates(currencies):
     return rates
 
 
-def get_exchange_rate(json_file) -> list[Any] | None:
+def get_exchange_rates(json_file) -> list[Any] | None:
     """получает json-файл с кодировкой иностранных валют и url-ссылку по обменным курсам валют и
     возвращает значения текущих котировок этих валют"""
     try:
@@ -268,7 +268,6 @@ def get_stock_prices(json_file: str) -> list[Any] | None:
         get_stock_price_logger.warning(f"!!!! Не удалось отобразить котировки акции. Ошибка - {e}")
 
 
-
 def group_expenses(filtered_data):
     """Группирует расходы по категориям и возвращает основные категории."""
     logging.debug("Начало группировки расходов")
@@ -304,3 +303,19 @@ def group_income(filtered_data):
 
     logging.info("Группировка поступлений завершена")
     return combined_income
+
+
+if __name__ == '__main__':
+    get_data_range(date_str, data_range)
+    greeting()
+    get_operations_excel()
+    generate_json(current_date)
+    filtered_cards()
+    read_xlsx(path)
+    common_information(list_dict)
+    get_top_five_transactions(transaction_lst)
+    get_currency_rates(currencies)
+    get_exchange_rates(json_file)
+    get_stock_prices(json_file)
+    group_expenses(filtered_data)
+    group_income(filtered_data)

@@ -11,15 +11,6 @@ from src.utils import (common_information, get_data_range, get_excel_df, greetin
 
 from user_settings_json import add_to_list, get_current_stock, settings
 
-from src.utils import (
-    get_card_spent,
-    get_currency,
-    get_date_time,
-    get_path_period,
-    get_stock_price,
-    greet_result,
-    transactions,
-)
 
 logger = logging.getLogger("views")
 log = os.path.join(os.path.dirname(__file__), "..", "logs", "views.log")
@@ -153,3 +144,10 @@ def analyze_data(date_str, data_range="M"):
 # Пример вызова функции анализа данных к веб-странице События
 result = analyze_data(date_str="31.12.2021 16:44:00", data_range="M")
 print(json.dumps(result, ensure_ascii=False, indent=4))
+
+
+if __name__ == '__main__':
+    greeting(date_time)
+    main(str_time)
+    final_list(current_date)
+    analyze_data(date_str, data_range)
