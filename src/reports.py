@@ -64,31 +64,21 @@ def date_now():
     return formatted_date
 
 
-def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> list[dict[Any, Any]]:
-    """ Функция возвращает траты по заданной категории за последние три месяца."""
-    if date is None:
-        date = pd.Timestamp.now()
-    else:
-        date = pd.Timestamp(date)
-
-    start_date = date - pd.DateOffset(months=3)
-
-    transactions["Дата операции"] = pd.to_datetime(
-        transactions["Дата операции"],
-        format="%d.%m.%Y %H:%M:%S"
-    )
-
-    filtered_transactions = transactions[
-        (transactions["Категория"] == category)
-        & (transactions["Дата операции"] >= start_date)
-        & (transactions["Дата операции"] <= date)
-    ]
-    df_dict = filtered_transactions.to_dict(orient='records')
-    result = []
-    for i in df_dict:
-        result.append({i["Категория"]: i["Сумма операции с округлением"]})
-    logging.info(f"Найдено {len(filtered_transactions)} транзакций по категории '{category}' за последние три месяца.")
-    return result
+@reports_decorator("report.txt")
+def spending_by_category(transactions: pd.DataFrame,
+                         category: str,
+                         date: Optional[str] = str(datetime.now())) -> pd.DataFrame:
+    """Функция, которая возвращает датафрейм с тратами по заданной категории
+       за последние три месяца (от переданной даты)."""
+    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], dayfirst=True)
+    transactions_by_category = transactions[(transactions['Дата операции']
+                                             <= (pd.to_datetime(date, dayfirst=True) + relativedelta(months=2)))
+                                            & (transactions['Дата операции'] >= pd.to_datetime(date, dayfirst=True))
+                                            & (transactions['Категория'].str.upper() == category.upper())]
+    trans = pd.DataFrame(transactions_by_category.groupby(['Категория'], as_index=False).
+                         agg({'Сумма операции': 'sum'})['Сумма операции'].rename({'Сумма операции': category}))
+    print(transactions_by_category.to_dict('records'))
+    return trans
 
 
 @decorator_with_args('./logs/report.json')
@@ -105,23 +95,6 @@ def decorator_with_args(file: str):
                 print("Не получилось записать информацию в файл")
         return wrapper
     return my_big_decorator
-
-
-@reports_decorator("report.txt")
-def spending_by_category(transactions: pd.DataFrame,
-                         category: str,
-                         date: Optional[str] = str(datetime.now())) -> pd.DataFrame:
-    """Функция, которая возвращает датафрейм с тратами по заданной категории
-       за последние три месяца (от переданной даты)."""
-    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], dayfirst=True)
-    transactions_by_category = transactions[(transactions['Дата операции']
-                                             <= (pd.to_datetime(date, dayfirst=True) + relativedelta(months=2)))
-                                            & (transactions['Дата операции'] >= pd.to_datetime(date, dayfirst=True))
-                                            & (transactions['Категория'].str.upper() == category.upper())]
-    trans = pd.DataFrame(transactions_by_category.groupby(['Категория'], as_index=False).
-                         agg({'Сумма операции': 'sum'})['Сумма операции'].rename({'Сумма операции': category}))
-    print(transactions_by_category.to_dict('records'))
-    return trans
 
 
 def print_spending_by_date(func):
@@ -174,3 +147,14 @@ def report_decorator(filename=None):
         return wrapper
 
     return decorator
+
+
+if __name__ == '__main__':
+    log_report_to_file(filename)
+    date_now()
+    spending_by_category(transactions, category, date)
+    decorator_with_args(file)
+    print_spending_by_date(func)
+    print_name_spending_by_date(file_name)
+    spending_by_weekday(transactions, date)
+    report_decorator(filename)

@@ -94,35 +94,6 @@ def most_profit_cashback(transactions: list[dict], year, month: Union[int, str])
         return "[]"
 
 
-def invest_bank(transactions: list[dict], month: str, limit: int) -> float | None:
-    """Возвращает сумму денежных средств, которую можно отложить с трат при заданном размере округления"""
-    try:
-        if not transactions:
-            invest_bank_logger.warning('!!!! Список словарей должен содержать значения.')
-        elif limit < 0:
-            invest_bank_logger.warning(
-                f"!!!! Проверьте корректность порога округления месяца. Текущее значение месяца - {limit}"
-            )
-        else:
-            data = pd.DataFrame(transactions)
-            data["datetime"] = pd.to_datetime(data["Дата операции"], dayfirst=True)
-            data_obj = datetime.datetime.strptime(month, "%Y-%m")
-            data["datetime_new"] = data["datetime"].dt.strftime("%y-%m")
-            df_init = data[(data["datetime"].dt.year == data_obj.year) & (data["datetime"].dt.month == data_obj.month)]
-            if df_init.empty:
-                invest_bank_logger.info("Задайте другую дату")
-            else:
-                pd.options.mode.chained_assignment = None  # default='warn'
-                df_init["Платеж_округл"] = df_init["Сумма платежа"].round(-2).abs()
-                df = df_init[df_init["Сумма платежа"] < 0]
-                df["Сумма платежа"] = -df["Сумма платежа"]
-                df["Инвесткопилка"] = ((df["Сумма платежа"] / limit).apply(np.ceil)) * limit - df["Сумма платежа"]
-                invest_bank_logger.info(f"На инвесткопилку можно отложить {round(df['Инвесткопилка'], 2).sum()} д.ед.")
-                return float(round(df["Инвесткопилка"], 2).sum())
-    except Exception as e:
-        invest_bank_logger.warning(f"!!!! Неудачное завершение операции. Ошибка {e}.")
-
-
 def investment_bank(transactions: list[dict], month: str, limit: int) -> float | None:
     """Возвращает сумму денежных средств, которую можно отложить с трат при заданном размере округления"""
     try:
@@ -174,3 +145,11 @@ def search_by_numbers(search_bar: str, list_operations: list[dict]) -> str:
         services_logger.error(f"Ошибка при обработке списка словарей: {e}")
         return json.dumps([])
     return json.dumps(result, ensure_ascii=False, indent=4)
+
+
+if __name__ == '__main__':
+    get_beneficial_cashback_categories(data, year, month)
+    accumulate(acc, transaction)
+    most_profit_cashback(transactions, year, month)
+    investment_bank(transactions, month, limit)
+    search_by_numbers(search_bar, list_operations)
