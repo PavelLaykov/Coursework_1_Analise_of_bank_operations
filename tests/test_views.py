@@ -24,6 +24,8 @@ from src.utils import main, get_data_range, get_stock_prices, group_expenses, gr
         ("01.01.2023", "ALL", datetime(2021, 1, 1, 16, 44, 0), datetime(2023, 1, 1, 0, 0, 0)),
     ],
 )
+
+
 def test_get_data_range(date_str, data_range, expected_start, expected_end):
     start, end = get_data_range(date_str, data_range)
     assert start == expected_start
@@ -31,6 +33,7 @@ def test_get_data_range(date_str, data_range, expected_start, expected_end):
 
     with pytest.raises(ValueError):
         get_data_range("01.01.2023", "INVALID")
+
 
 def test_get_data_range_month():
     date_str = "15.10.2023"
@@ -41,6 +44,7 @@ def test_get_data_range_month():
 
     assert start == expected_start
     assert end == expected_end
+
 
 def test_get_data_range_week():
     date_str = "15.10.2023 12:00:00"
@@ -86,7 +90,6 @@ def test_get_data_range_no_time():
 
     assert start == expected_start
     assert end == expected_end
-
 
 
 # Тесты для функции get_stock_prices
@@ -157,4 +160,17 @@ def test_main():
 
 if __name__ == '__main__':
     unittest.main()
+    test_get_data_range(date_str, data_range, expected_start, expected_end)
+    test_get_data_range_month()
+    test_get_data_range_week()
+    test_get_data_range_year()
+    test_get_data_range_all()
+    test_get_data_range_invalid_period()
+    test_get_data_range_no_time()
+    test_get_stock_prices(mock_get)
+    test_get_stock_prices_partial_success()
+    test_get_stock_prices_request_exception()
+    test_group_expenses()
+    test_group_income()
+    test_main()
     print('Завершено успешно')

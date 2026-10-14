@@ -16,9 +16,9 @@ from src.utils import get_excel
 logger = logging.getLogger(__name__)
 
 
-# Фикстура для генерации тестовых данных
+# Фикс тура для генерации тестовых данных
 @pytest.fixture
-def transactions_data():
+def test_transactions_data():
     data = {
         "Дата операции": [
             datetime(2023, 1, 15),
@@ -41,7 +41,7 @@ def test_spending_by_category(category):
 
 
 @pytest.fixture
-def cleanup_files():
+def test_cleanup_files():
     yield
     # Удаляем файлы после теста
     files = os.listdir('data')
@@ -69,8 +69,9 @@ def test_spending_by_category_missing_category_column(transactions_data):
 
     assert result == {}
 
+
 @pytest.fixture
-def transactions():
+def test_transactions():
     return pd.DataFrame({
         "Дата операции": [
             datetime(2023, 1, 15),
@@ -95,6 +96,7 @@ def transactions():
         ]
     })
 
+
 def test_spending_by_category_success(transactions):
     category = "Еда"
     result = spending_by_category(transactions, category)
@@ -102,6 +104,7 @@ def test_spending_by_category_success(transactions):
     assert result[category: str] == category
     assert result[date_from: str] == (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
     assert result[date_to: str] == datetime.now().strftime("%Y-%m-%d")
+
 
 def test_spending_by_category_no_expenses(transactions):
     category = "Транспорт"
@@ -128,6 +131,7 @@ def test_spending_by_category_with_date(transactions):
 def temp_filename(tmp_path):
     return tmp_path / "report.json"
 
+
 # Тест на успешную запись DataFrame в файл
 def test_log_report_to_file_success(temp_filename):
     @log_report_to_file(temp_filename)
@@ -150,7 +154,7 @@ def test_log_report_to_file_success(temp_filename):
         assert len(file_content) == 2  # Должно быть две строки
 
     # Проверка логов
-    mock_logger.info.assert_any_call("Проверка: являются ли данные датафреймом")
+    mock_logger.info.assert_any_call("Проверка: являются ли данные дата фреймом")
     mock_logger.info.assert_any_call("Запись отчёта в файл")
 
 
@@ -170,8 +174,8 @@ def test_log_report_to_file_not_dataframe(temp_filename):
     assert not os.path.exists(temp_filename)
 
     # Проверка логов
-    mock_logger.info.assert_any_call("Проверка: являются ли данные датафреймом")
-    mock_logger.error.assert_called_once_with("Данные не являются датафреймом. В файл записаны не будут")
+    mock_logger.info.assert_any_call("Проверка: являются ли данные дата фреймом")
+    mock_logger.error.assert_called_once_with("Данные не являются дата фреймом. В файл записаны не будут")
 
 
 def test_record_file(category):
@@ -209,3 +213,13 @@ def test_save_report_creates_file(cleanup_files):
 
 if __name__ == '__main__':
     unittest.main()
+    test_transactions_data()
+    test_spending_by_category(category)
+    test_cleanup_files()
+    test_spending_by_category_no_data(transactions_data, category)
+    test_spending_by_category_missing_category_column(transactions_data)
+    test_transactions()
+    test_spending_by_category_success(transactions)
+    test_log_report_to_file_not_dataframe(temp_filename)
+    test_record_file(category)
+    test_save_report_creates_file(cleanup_files)
