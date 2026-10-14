@@ -11,7 +11,7 @@ from src.services import get_beneficial_cashback_categories, find_numbers
 logging.basicConfig(level=logging.INFO)
 
 @pytest.fixture
-def transactions():
+def test_transactions():
     return [
         {"date": "2023-10-01", "amount": -1500, "category": "Еда"},
         {"date": "2023-10-05", "amount": -2000, "category": "Транспорт"},
@@ -75,3 +75,9 @@ def test_find_numbers(number):
 if __name__ == '__main__':
     unittest.main()
     pytest.main()
+    test_transactions()
+    test_get_beneficial_cashback_categories(transactions)
+    test_no_transactions()
+    test_only_unwanted_transactions(transactions)
+    test_search_by_numbers_logs_error(mock_error_logger)
+    test_find_numbers(number)

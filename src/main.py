@@ -1,11 +1,23 @@
 import json
 import logging
+import datetime
 import pandas as pd
 from typing import Any
-from config import file_path
 from src.reports import dir_transactions_excel, spending_by_category
 from src.services import get_beneficial_cashback_categories
-from src.views import analyze_data, website
+from src.views import analyze_data
+
+logger = logging.getLogger("main")
+log = os.path.join(os.path.dirname(__file__), "..", "logs", "main.log")
+file_handler = logging.FileHandler(
+    os.path.join(os.path.dirname(__file__), "../logs/main.log"),
+    "w",
+    encoding="utf-8",
+)
+file_formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
 
 def main_page(data_user: str = None) -> Dict[str, Any]:
     """
@@ -71,7 +83,7 @@ def main_page(data_user: str = None) -> Dict[str, Any]:
 
 
 if __name__ == '__main__':
-    print("\nГЛАВНАЯ\n")
+    print("\nГЛАВНАЯ СТРАНИЦА\n")
     main_page()
 
     logging.basicConfig(level=logging.INFO)
