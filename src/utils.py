@@ -9,26 +9,24 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 from pandas import DataFrame, read_excel, to_datetime
-from settings import DATETIME_FORMAT_DMY_HMS, STORAGE_PATH
 
 # Настройка логирования
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
-file_handler = logging.FileHandler("./logs/utils.log", "a")
-file_formatter = logging.Formatter(
-    "%(asctime)s %(levelname)s: %(filename)s %(funcName)s: %(message)s"
-)
-file_handler.setFormatter(file_formatter)
-logger.addHandler(file_handler)
-logger.setLevel(logging.DEBUG)
+from logger_settings import get_logger
+from src.decorators import log
+
+logger = get_logger()
+
+
 get_excel_df_logger = logging.getLogger("get_excel_df")
 top_5_operations_logger = logging.getLogger("top_5_operations")
 common_information_logger = logging.getLogger("common_information")
 get_exchange_rate_logger = logging.getLogger("get_exchange_rate")
 get_stock_price_logger = logging.getLogger("get_stock_price")
 
+
+@log()
 def get_data_range(date_str, data_range):
-    # Преобразуйте входную строку на случай, если время отсутствует
+    """ Функция преобразования входной строки, если время не задано"""
     if len(date_str) == 10:  # формат 'DD.MM.YYYY'
         date_str += " 00:00:00"
         logging.debug(f"Преобразована строка даты: {date_str}")
@@ -67,6 +65,7 @@ def get_data_range(date_str, data_range):
     return start_date, end_date
 
 
+@log()
 def greeting() -> str:
     """Функция возвращает приветствие в зависимости от текущего времени/"""
     # Получаем текущее время
@@ -94,8 +93,30 @@ def greeting() -> str:
         return day
 
 
+@log()
+def read_xlsx(file_path) -> Union[None, pd.DataFrame]:
+    """
+    Чтение файла Excel и получение номера карты и
+    :param file_path: расположение файла
+    :return: файл DataFrame
+    """
+    # Проверка на формат файла
+    if file_path is None:
+        logger.warning("Файл не найден")
+        return None
+    if not (file_path.endswith(".xlsx") or file_path.endswith(".xls")):  # проверка формата файла (окончание .xlsx)
+        logger.warning("Неверный формат файла")
+        return None
+    try:
+        excel_datas = pd.read_excel(file_path)
+        return excel_datas
+    except Exception as e:
+        logger.warning(f"Ошибка файла {e}")
+        return None
+
+@log()
 def get_operations_excel() -> list[dict]:
-    """Возвращает список транзакций (словарь или датафрейм), загруженный из внешнего файла Excel
+    """ Функция возвращает список транзакций (словарь или датафрейм), загруженный из внешнего файла Excel
     и возвращает их в формате DataFrame за период с начала месяца до заданной даты в формате YYYY-MM-DD HH:MM:SS"""
     current_transaction = []
     get_excel_file = pd.read_excel("./data/operations.xlsx")
@@ -123,6 +144,7 @@ cards = []
 top_list = []
 
 
+@log()
 def generate_json(current_date):
     """Функция, возвращающая отфильтрованные по дате транзакции"""
     for transaction in get_excel("dict"):
@@ -135,6 +157,7 @@ def generate_json(current_date):
     return current_transactions
 
 
+@log()
 def filtered_cards():
     """Функция, возвращающая правильный список карт"""
     for transaction in current_transactions:
@@ -148,10 +171,7 @@ def filtered_cards():
     return cards
 
 
-def read_xlsx(path: str) -> DataFrame:
-    return read_excel(path)
-
-
+@log()
 def common_information(list_dict: list[dict]) -> list[Any] | None:
     """возвращает общую информацию по всем транзакциям"""
     try:
@@ -173,6 +193,7 @@ def common_information(list_dict: list[dict]) -> list[Any] | None:
         )
 
 
+@log()
 def get_top_five_transactions(transaction_lst_: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Принимает список словарей транзакций. Формирует список Топ-5 транзакций по сумме платежа.
@@ -201,6 +222,7 @@ def get_top_five_transactions(transaction_lst_: list[dict[str, Any]]) -> list[di
     return top_transactions
 
 
+@log()
 def get_currency_rates(currencies):
     rates = {}
     for currency in currencies:
@@ -218,6 +240,7 @@ def get_currency_rates(currencies):
     return rates
 
 
+@log()
 def get_exchange_rates(json_file) -> list[Any] | None:
     """получает json-файл с кодировкой иностранных валют и url-ссылку по обменным курсам валют и
     возвращает значения текущих котировок этих валют"""
@@ -241,6 +264,7 @@ def get_exchange_rates(json_file) -> list[Any] | None:
         return []
 
 
+@log()
 def get_stock_prices(json_file: str) -> list[Any] | None:
     """Получает json-файл с наименованиями ценных бумаг и url-ссылку на котировки ценных бумаг и
     возвращает их текущие котировки."""
@@ -268,6 +292,7 @@ def get_stock_prices(json_file: str) -> list[Any] | None:
         get_stock_price_logger.warning(f"!!!! Не удалось отобразить котировки акции. Ошибка - {e}")
 
 
+@log()
 def group_expenses(filtered_data):
     """Группирует расходы по категориям и возвращает основные категории."""
     logging.debug("Начало группировки расходов")
@@ -287,6 +312,7 @@ def group_expenses(filtered_data):
     return combined_expenses
 
 
+@log()
 def group_income(filtered_data):
     """Группирует поступления по категориям и возвращает основные категории."""
     logging.debug("Начало группировки поступлений")
@@ -306,16 +332,17 @@ def group_income(filtered_data):
 
 
 if __name__ == '__main__':
-    get_data_range(date_str, data_range)
-    greeting()
-    get_operations_excel()
-    generate_json(current_date)
-    filtered_cards()
-    read_xlsx(path)
-    common_information(list_dict)
-    get_top_five_transactions(transaction_lst)
-    get_currency_rates(currencies)
-    get_exchange_rates(json_file)
-    get_stock_prices(json_file)
-    group_expenses(filtered_data)
-    group_income(filtered_data)
+    #group_income(filtered_data)
+    #group_expenses(filtered_data)
+    #get_stock_prices(json_file)
+    #get_exchange_rates(json_file)
+    #get_currency_rates(currencies)
+    #get_top_five_transactions(transaction_lst)
+    #common_information(list_dict)
+    #read_xlsx(path)
+    #filtered_cards()
+    #generate_json(current_date)
+    #get_operations_excel()
+    #greeting()
+    #get_data_range(date_str, data_range)
+    print('utils')
