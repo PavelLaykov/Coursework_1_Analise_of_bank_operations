@@ -3,7 +3,8 @@ import os
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch
-
+from freezegun import freeze_time
+from pandas import Timestamp
 
 import pandas as pd
 import pytest
@@ -33,11 +34,35 @@ def test_transactions_data():
     return pd.DataFrame(data)
 
 
-def test_spending_by_category(category):
-    assert (
-        spending_by_category(get_excel("dataframe"), "Фастфуд", "17.01.2018")
-        == category
-    )
+@freeze_time("2024-12-30 10:00:00,000")
+def test_spending_by_category(sample_df):
+    data = spending_by_category(sample_df, "Кафе")
+    assert data.to_dict("records") == [
+        {
+            "Дата операции": "2024-10-03",
+            "Дата платежа": Timestamp("2024-10-03 00:00:00"),
+            "Категория": "Кафе",
+            "Номер карты": "*2222",
+            "Описание": "Кофейня",
+            "Сумма операции": -300,
+        },
+        {
+            "Дата операции": "2024-11-02",
+            "Дата платежа": Timestamp("2024-11-02 00:00:00"),
+            "Категория": "Кафе",
+            "Номер карты": "*4444",
+            "Описание": "Шоколадница",
+            "Сумма операции": -500,
+        },
+        {
+            "Дата операции": "2024-12-01",
+            "Дата платежа": Timestamp("2024-12-01 00:00:00"),
+            "Категория": "Кафе",
+            "Номер карты": "*6666",
+            "Описание": "Кофейня",
+            "Сумма операции": -700,
+        },
+    ]
 
 
 @pytest.fixture
@@ -212,14 +237,14 @@ def test_save_report_creates_file(cleanup_files):
 
 
 if __name__ == '__main__':
-    unittest.main()
-    test_transactions_data()
-    test_spending_by_category(category)
-    test_cleanup_files()
-    test_spending_by_category_no_data(transactions_data, category)
-    test_spending_by_category_missing_category_column(transactions_data)
-    test_transactions()
-    test_spending_by_category_success(transactions)
-    test_log_report_to_file_not_dataframe(temp_filename)
-    test_record_file(category)
     test_save_report_creates_file(cleanup_files)
+    test_record_file(category)
+    test_log_report_to_file_not_dataframe(temp_filename)
+    test_spending_by_category_success(transactions)
+    test_transactions()
+    test_spending_by_category_missing_category_column(transactions_data)
+    test_spending_by_category_no_data(transactions_data, category)
+    test_cleanup_files()
+    test_spending_by_category(category)
+    test_transactions_data()
+    unittest.main()
