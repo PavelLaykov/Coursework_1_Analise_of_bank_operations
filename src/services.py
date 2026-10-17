@@ -4,17 +4,16 @@ from collections import defaultdict
 import datetime
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from functools import reduce
-from src.views import get_excel
-from src.logger import setup_logging
 
 # Настройка логирования
-current_dir = Path(__file__).parent.parent.resolve()
-file_path_log = current_dir/'../log', 'services.log'
-logger = setup_logging('services', file_path_log)
+from logger_settings import get_logger
+from src.decorators import log
+
+logger = get_logger()
 
 
+@log()
 def get_beneficial_cashback_categories(data, year, month):
     """
     Функция «Выгодные категории повышенного кешбэка»
@@ -37,7 +36,7 @@ def get_beneficial_cashback_categories(data, year, month):
     logger.info("Отфильтрованные транзакции: %s", filtered_transactions)
 
 
-# Функция для аккумулирования сумм по категориям
+    # Функция для аккумулирования сумм по категориям
     def accumulate(acc, transaction):
         category = transaction["category"]
         amount = abs(transaction["amount"])
@@ -47,15 +46,16 @@ def get_beneficial_cashback_categories(data, year, month):
     category_cashback = reduce(accumulate, filtered_transactions, defaultdict(int))
 
     # Формируем кэшбэк (1% от суммы) и превращаем его в обычный словарь
-    cashbacks = {category: round(amount * 0.01) for category, amount in category_cashback.items()}
+    cashback = {category: round(amount * 0.01) for category, amount in category_cashback.items()}
 
-    logger.info("Сумма cashback: %s", cashbacks)
+    logger.info("Сумма cashback: %s", cashback)
 
-    return json.dumps(cashbacks, ensure_ascii=False, indent=4)
+    return json.dumps(cashback, ensure_ascii=False, indent=4)
 
 
+@log()
 def most_profit_cashback(transactions: list[dict], year, month: Union[int, str]) -> str:
-    """возвращает повышенные категории кэшбэка из списка транзакций за определенные месяц и год"""
+    """Функция возвращает повышенные категории кэшбэка из списка транзакций за определенные месяц и год"""
     try:
         if int(month) < 1 or int(month) > 12:
             most_profit_cashback_logger.warning(
@@ -94,6 +94,7 @@ def most_profit_cashback(transactions: list[dict], year, month: Union[int, str])
         return "[]"
 
 
+@log()
 def investment_bank(transactions: list[dict], month: str, limit: int) -> float | None:
     """Возвращает сумму денежных средств, которую можно отложить с трат при заданном размере округления"""
     try:
@@ -123,6 +124,7 @@ def investment_bank(transactions: list[dict], month: str, limit: int) -> float |
         invest_bank_logger.warning(f"!!!! Неудачное завершение операции. Ошибка {e}.")
 
 
+@log()
 def search_by_numbers(search_bar: str, list_operations: list[dict]) -> str:
     """
     Функция поиска по телефонным номерам.
@@ -148,8 +150,9 @@ def search_by_numbers(search_bar: str, list_operations: list[dict]) -> str:
 
 
 if __name__ == '__main__':
-    get_beneficial_cashback_categories(data, year, month)
-    accumulate(acc, transaction)
-    most_profit_cashback(transactions, year, month)
-    investment_bank(transactions, month, limit)
-    search_by_numbers(search_bar, list_operations)
+    #search_by_numbers(search_bar, list_operations)
+    #investment_bank(transactions, month, limit)
+    #most_profit_cashback(transactions, year, month)
+    #accumulate(acc, transaction)
+    #get_beneficial_cashback_categories(data, year, month)
+    print('services')

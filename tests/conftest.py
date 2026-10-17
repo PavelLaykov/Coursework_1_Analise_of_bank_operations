@@ -178,9 +178,9 @@ def test_category():
 
 
 if __name__ == '__main__':
-    test_top_transactions()
-    test_generate_all_transactions()
-    test_filtered_cards()
-    test_get_excel_0()
-    test_number()
     test_category()
+    test_number()
+    test_get_excel_0()
+    test_filtered_cards()
+    test_generate_all_transactions()
+    test_top_transactions()

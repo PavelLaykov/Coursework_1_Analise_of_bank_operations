@@ -73,11 +73,11 @@ def test_find_numbers(number):
 
 
 if __name__ == '__main__':
-    unittest.main()
-    pytest.main()
-    test_transactions()
-    test_get_beneficial_cashback_categories(transactions)
-    test_no_transactions()
-    test_only_unwanted_transactions(transactions)
-    test_search_by_numbers_logs_error(mock_error_logger)
     test_find_numbers(number)
+    test_search_by_numbers_logs_error(mock_error_logger)
+    test_only_unwanted_transactions(transactions)
+    test_no_transactions()
+    test_get_beneficial_cashback_categories(transactions)
+    test_transactions()
+    pytest.main()
+    unittest.main()

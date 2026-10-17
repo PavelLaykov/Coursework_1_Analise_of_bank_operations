@@ -1,40 +1,29 @@
 import datetime
 import json
-import logging
-import os
 from json import JSONDecodeError
+from pathlib import Path
+
 import pandas as pd
 
-from config import file_path, file_path1
-from src.utils import (common_information, get_data_range, get_excel_df, greetings, get_top_five_transactions,
-    get_currency_rates,  get_stock_prices, group_expenses, group_income)
+# Настройка логирования
+from logger_settings import get_logger
+from src.decorators import log
+from src.utils import read_xlsx
 
-from user_settings_json import add_to_list, get_current_stock, settings
-
-
-logger = logging.getLogger("views")
-log = os.path.join(os.path.dirname(__file__), "..", "logs", "views.log")
-file_handler = logging.FileHandler(
-    os.path.join(os.path.dirname(__file__), "../logs/views.log"),
-    "w",
-    encoding="utf-8",
-)
-file_formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
-file_handler.setFormatter(file_formatter)
-logger.addHandler(file_handler)
-logger.setLevel(logging.INFO)
+logger = get_logger()
 
 
-def greeting(date_time: str) -> str:
+BASEDIR = Path(__file__).parent.parent.resolve()
+file_path = str(BASEDIR / "data" / "operations.xlsx")
+
+@log()
+def get_greeting(date_time: str) -> str:
     """Приветствие пользователя в зависимости от его времени суток"""
-    greeting = greet_result()
-    time_period = get_date_time(date_time)
-    sorted_df = get_path_period(
-        os.path.join(os.path.dirname(__file__), "../data/operations.xlsx"),
-        time_period,
-    )
+    greeting = ""
+    time_period = (date_time, "%Y-%m-%d %H:%M:%S")
+    sorted_df = get_path_period(file_path, time_period)
     cards = get_card_spent(sorted_df)
-    top_transactions = transactions(sorted_df)
+    top_transactions = transactions(sorted_df, object)
     currency_rates = get_currency()
     stock_prices = get_stock_price()
     try:
@@ -60,10 +49,11 @@ def greeting(date_time: str) -> str:
 transaction_for_print = [{}]
 
 
-def main(str_time):
+@log()
+def main_views(str_time='datetime'):
     """Главная функция для анализа данных принимает дату в формате строки YYYY-MM-DD HH:MM:SS и
     возвращает общую информацию в формате json о банковских транзакциях за период с начала месяца до этой даты"""
-    data = get_excel_df("operations.xlsx")
+    data = read_xlsx(file_path)
     data_df = pd.DataFrame(data)
     date_obj = datetime.datetime.strptime(str_time, "%Y-%m-%d %H:%M:%S")
     data_df["datetime"] = pd.to_datetime(data_df["Дата операции"], dayfirst=True)
@@ -72,7 +62,7 @@ def main(str_time):
         ]
 
     agg_dict = {
-        "greetings": greetings(),
+        "greetings": get_greeting('datetime'),
         "cards": common_information(json_data),
         "top_transactions": get_top_five_transactions(json_data),
         "currency_rates": get_stock_price("user_settings.json"),
@@ -81,9 +71,11 @@ def main(str_time):
     return json.dumps(agg_dict, ensure_ascii=False)
 
 
-print(main(str_time="2020-08-11 15:25:00"))
+print(main_views(str_time="2020-08-11 15:25:00"))
 
 
+
+@log()
 def final_list(current_date):
     """Функция, формирующая конечный список из готовых данных"""
     generate_json(current_date)
@@ -100,7 +92,8 @@ def final_list(current_date):
 print(final_list("01.11.2021 23:50:17"), sep="\n")
 
 
-def analyze_data(date_str, data_range="M"):
+@log()
+def analyze_data(date_str='datetime', data_range="M"):
     """Функция для анализа данных."""
     start_date, end_date = get_data_range(date_str, data_range)
     filtered_data = pd.read_excel(file_path)
@@ -147,7 +140,8 @@ print(json.dumps(result, ensure_ascii=False, indent=4))
 
 
 if __name__ == '__main__':
-    greeting(date_time)
-    main(str_time)
-    final_list(current_date)
-    analyze_data(date_str, data_range)
+    #analyze_data(date_str='datetime', data_range)
+    #final_list(current_date)
+    #main_views(str_time)
+    #get_greeting(datetime)
+    print('views')
